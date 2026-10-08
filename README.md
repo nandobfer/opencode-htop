@@ -4,22 +4,27 @@ An [OpenCode](https://opencode.ai) plugin that shows live system usage — CPU,
 memory, swap, and disk — as compact colored bars in the sidebar.
 
 ```text
-CPU                     33% 2.0/6
+▼ System
+CPU 33%                     2.0/6
 ███████████████░░░░░░░░░░░░░░░░░░░░░░░░
-MEM                  30% 3.5G/11.7G
+MEM 30%                  3.5G/11.7G
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░
-SWP                   26% 2.1G/8.0G
+SWP 26%                   2.1G/8.0G
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░
-DSK                  74% 143G/193G
+DSK 74%                   143G/193G
 █████████████████████████████████░░░░░░
 ```
 
-Each resource takes two lines: the label on the left and the percentage with
+Each resource takes two lines: the label and percentage on the left and
 used/total on the right, above a bar that stretches to the full width of the
 sidebar. The bar and its figures change color as consumption rises. The numbers
 come from the OpenCode **server**, so the bars reflect the machine that is
 actually running your sessions — even when the TUI is attached to a remote
 server with `opencode --server`.
+
+Click the title or triangle to switch to a compact view (one line per resource,
+with colored hyphens proportional to usage). Click again to expand. Polling
+continues in both views and does not reset the selected view.
 
 ## How it works
 
@@ -89,6 +94,7 @@ Pass options through the object form of the plugin entry:
 | Option     | Type                     | Default    | Description                                              |
 | ---------- | ------------------------ | ---------- | -------------------------------------------------------- |
 | `interval` | `number` (ms)            | `3000`     | How often the bars refresh.                              |
+| `title` | `string` | `"System"` | Clickable section heading. |
 | `position` | `"bottom"` \| `"top"`    | `"bottom"` | Where the bars sit inside the sidebar content. `"bottom"` appends them, so they follow the plugin order; `"top"` pins them above the other sections. |
 
 ## Colors
@@ -114,8 +120,18 @@ The bar and its figures change color with the reading:
 
 ```bash
 npm install
+npm test
 npm run typecheck
+npm run build
 ```
+
+Edit `src/tui.tsx`, then rebuild and commit `dist/tui.js` before pushing.
+The package ships precompiled Solid JSX: the runtime transformer skips files
+inside `node_modules`, where Git/npm-installed plugins live. Shipping raw JSX
+there can leave signals and the collapse button visually non-reactive.
+`tui.tsx` at the package root is only a compatibility entrypoint.
+Tests exercise actual mouse clicks, both layouts, and metric updates against
+both source and precompiled components. They require Bun (`npm test` uses npx).
 
 ## License
 

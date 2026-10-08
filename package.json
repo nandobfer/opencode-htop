@@ -8,12 +8,13 @@
   "exports": {
     ".": "./index.ts",
     "./rpc": "./rpc.ts",
-    "./tui": "./tui.tsx"
+    "./tui": "./dist/tui.js"
   },
   "files": [
     "index.ts",
     "rpc.ts",
-    "tui.tsx"
+    "tui.tsx",
+    "dist/tui.js"
   ],
   "publishConfig": {
     "access": "public"
@@ -30,7 +31,10 @@
     "disk"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && npx -y bun test --preload @opentui/solid/preload",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@opencode/plugin": "latest"
@@ -41,11 +45,15 @@
     "solid-js": ">=1.9.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-typescript": "^7.27.1",
     "@opencode/client": "^2.0.24",
     "@opencode/theme": "^2.0.24",
     "@opentui/core": "^0.5.17",
     "@opentui/solid": "^0.5.17",
+    "@types/bun": "^1.4.2",
     "@types/node": "^22.10.0",
+    "babel-preset-solid": "^1.9.12",
     "solid-js": "^1.9.12",
     "typescript": "^5.6.0"
   }
