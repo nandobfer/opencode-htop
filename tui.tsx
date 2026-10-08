@@ -158,8 +158,8 @@ function StatsList(props: { stats: Stats; mode: "dark" | "light"; compact: boole
 }
 
 interface SectionProps {
-  readonly stats: Stats | undefined
-  readonly failed: boolean
+  readonly stats: () => Stats | undefined
+  readonly failed: () => boolean
   readonly mode: "dark" | "light"
   readonly title: string
   readonly titleColor: ColorInput
@@ -181,9 +181,9 @@ function Section(props: SectionProps) {
         </text>
       </box>
       <Show
-        when={props.stats}
+        when={props.stats()}
         fallback={
-          <text fg={labelColor(props.mode)}>{props.failed ? "htop unavailable" : "htop …"}</text>
+          <text fg={labelColor(props.mode)}>{props.failed() ? "htop unavailable" : "htop …"}</text>
         }
       >
         {(stats: () => Stats) => (
@@ -233,8 +233,8 @@ export default Plugin.define({
 
     const render = () => (
       <Section
-        stats={stats()}
-        failed={failed()}
+        stats={stats}
+        failed={failed}
         mode={context.themeMode}
         title={title}
         titleColor={context.theme.text.base}
