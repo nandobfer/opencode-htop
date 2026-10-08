@@ -122,7 +122,7 @@ The bar and its figures change color with the reading:
 npm install
 npm test
 npm run typecheck
-npm run build
+npm run build:tui
 ```
 
 Edit `src/tui.tsx`, then rebuild and commit `dist/tui.js` before pushing.

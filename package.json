@@ -32,9 +32,9 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "node scripts/build.mjs",
-    "test": "npm run build && npx -y bun test --preload @opentui/solid/preload",
-    "prepublishOnly": "npm run build"
+    "build:tui": "node scripts/build.mjs",
+    "test": "npm run build:tui && npx -y bun test --preload @opentui/solid/preload",
+    "prepublishOnly": "npm run build:tui"
   },
   "dependencies": {
     "@opencode/plugin": "latest"
