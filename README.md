@@ -4,21 +4,22 @@ An [OpenCode](https://opencode.ai) plugin that shows live system usage — CPU,
 memory, swap, and disk — as compact colored bars in the sidebar.
 
 ```text
-CPU 33% 2.0/6
+CPU                     33% 2.0/6
 ███████████████░░░░░░░░░░░░░░░░░░░░░░░░
-MEM 30% 3.5G/11.7G
+MEM                  30% 3.5G/11.7G
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░
-SWP 26% 2.1G/8.0G
+SWP                   26% 2.1G/8.0G
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░
-DSK 74% 143G/193G
+DSK                  74% 143G/193G
 █████████████████████████████████░░░░░░
 ```
 
-Each resource takes two lines: the label, percentage, and used/total above a bar
-that stretches to the full width of the sidebar. The bar and its figures change
-color as consumption rises. The numbers come from the OpenCode **server**, so the
-bars reflect the machine that is actually running your sessions — even when the
-TUI is attached to a remote server with `opencode --server`.
+Each resource takes two lines: the label on the left and the percentage with
+used/total on the right, above a bar that stretches to the full width of the
+sidebar. The bar and its figures change color as consumption rises. The numbers
+come from the OpenCode **server**, so the bars reflect the machine that is
+actually running your sessions — even when the TUI is attached to a remote
+server with `opencode --server`.
 
 ## How it works
 

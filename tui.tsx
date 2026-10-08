@@ -96,8 +96,8 @@ function Resource(props: ResourceProps) {
   const color = () => thresholdColor(props.usage.percent)
   return (
     <box flexDirection="column">
-      <box flexDirection="row">
-        <text fg={labelColor(props.mode)}>{`${props.label} `}</text>
+      <box flexDirection="row" width="100%" justifyContent="space-between">
+        <text fg={labelColor(props.mode)}>{props.label}</text>
         <text fg={color()}>{`${Math.round(percent())}% ${props.detail}`}</text>
       </box>
       <Bar percent={percent()} color={color()} track={trackColor(props.mode)} />
