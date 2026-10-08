@@ -1,5 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { Plugin } from "@opencode/plugin/tui"
+import type { ColorInput } from "@opentui/core"
 import { Show, createSignal } from "solid-js"
 import { Htop, type Stats, type Usage } from "./rpc"
 
@@ -11,6 +12,10 @@ const TRACK_DARK = "#3f3f46"
 const TRACK_LIGHT = "#d4d4d8"
 
 const DEFAULT_INTERVAL_MS = 3000
+const DEFAULT_TITLE = "System"
+
+/** How many hyphens make up a full (100%) bar in the collapsed view. */
+const COLLAPSED_BAR_WIDTH = 16
 
 function numberOption(options: Readonly<Record<string, any>>, key: string, fallback: number): number {
   const value = options[key]
@@ -63,17 +68,31 @@ function cpuDetail(reading: Usage): string {
   return `${reading.used.toFixed(1)}/${reading.total.toFixed(0)}`
 }
 
-interface BarProps {
-  readonly percent: number
-  readonly color: string
-  readonly track: string
+interface ResourceDef {
+  readonly label: string
+  readonly usage: (stats: Stats) => Usage
+  readonly detail: (stats: Stats) => string
+}
+
+const RESOURCES: readonly ResourceDef[] = [
+  { label: "CPU", usage: (stats) => stats.cpu, detail: (stats) => cpuDetail(stats.cpu) },
+  { label: "MEM", usage: (stats) => stats.memory, detail: (stats) => bytesDetail(stats.memory) },
+  { label: "SWP", usage: (stats) => stats.swap, detail: (stats) => bytesDetail(stats.swap) },
+  { label: "DSK", usage: (stats) => stats.disk, detail: (stats) => bytesDetail(stats.disk) },
+]
+
+interface ResourceProps {
+  readonly label: string
+  readonly usage: Usage
+  readonly detail: string
+  readonly mode: "dark" | "light"
 }
 
 /**
  * A bar that stretches to the full width of its container: two flex children
  * split the row in the used/remaining proportion, each filled with its color.
  */
-function Bar(props: BarProps) {
+function Bar(props: { percent: number; color: string; track: string }) {
   const used = () => clampPercent(props.percent)
   return (
     <box flexDirection="row" height={1} width="100%">
@@ -83,14 +102,7 @@ function Bar(props: BarProps) {
   )
 }
 
-interface ResourceProps {
-  readonly label: string
-  readonly usage: Usage
-  readonly detail: string
-  readonly mode: "dark" | "light"
-}
-
-/** One resource: a text line (label, percent, used/total) above a full-width bar. */
+/** Expanded: label left, values right, above a full-width bar. */
 function Resource(props: ResourceProps) {
   const percent = () => clampPercent(props.usage.percent)
   const color = () => thresholdColor(props.usage.percent)
@@ -105,15 +117,69 @@ function Resource(props: ResourceProps) {
   )
 }
 
-interface BarsProps {
+/** Collapsed: one line, hyphens standing in for the bar, values at the end. */
+function Compact(props: ResourceProps) {
+  const percent = () => clampPercent(props.usage.percent)
+  const color = () => thresholdColor(props.usage.percent)
+  const dashes = () => "-".repeat(Math.round((percent() / 100) * COLLAPSED_BAR_WIDTH))
+  return (
+    <box flexDirection="row" width="100%" justifyContent="space-between">
+      <box flexDirection="row">
+        <text fg={labelColor(props.mode)}>{`${props.label} `}</text>
+        <text fg={color()}>{dashes()}</text>
+      </box>
+      <text fg={color()}>{`${Math.round(percent())}% ${props.detail}`}</text>
+    </box>
+  )
+}
+
+function StatsList(props: { stats: Stats; mode: "dark" | "light"; compact: boolean }) {
+  return (
+    <box flexDirection="column" width="100%">
+      {RESOURCES.map((resource) =>
+        props.compact ? (
+          <Compact
+            label={resource.label}
+            usage={resource.usage(props.stats)}
+            detail={resource.detail(props.stats)}
+            mode={props.mode}
+          />
+        ) : (
+          <Resource
+            label={resource.label}
+            usage={resource.usage(props.stats)}
+            detail={resource.detail(props.stats)}
+            mode={props.mode}
+          />
+        ),
+      )}
+    </box>
+  )
+}
+
+interface SectionProps {
   readonly stats: Stats | undefined
   readonly failed: boolean
   readonly mode: "dark" | "light"
+  readonly title: string
+  readonly titleColor: ColorInput
 }
 
-function Bars(props: BarsProps) {
+/**
+ * The sidebar section: a title with a triangle that expands or collapses the
+ * contents on click, like the Quota section. Expanded shows the full-width
+ * bars; collapsed shows one compact line per resource.
+ */
+function Section(props: SectionProps) {
+  const [open, setOpen] = createSignal(true)
   return (
     <box flexDirection="column" width="100%">
+      <box flexDirection="row" gap={1} onMouseDown={() => setOpen((value) => !value)}>
+        <text fg={props.titleColor}>{open() ? "▼" : "▶"}</text>
+        <text fg={props.titleColor}>
+          <b>{props.title}</b>
+        </text>
+      </box>
       <Show
         when={props.stats}
         fallback={
@@ -121,32 +187,7 @@ function Bars(props: BarsProps) {
         }
       >
         {(stats: () => Stats) => (
-          <>
-            <Resource
-              label="CPU"
-              usage={stats().cpu}
-              detail={cpuDetail(stats().cpu)}
-              mode={props.mode}
-            />
-            <Resource
-              label="MEM"
-              usage={stats().memory}
-              detail={bytesDetail(stats().memory)}
-              mode={props.mode}
-            />
-            <Resource
-              label="SWP"
-              usage={stats().swap}
-              detail={bytesDetail(stats().swap)}
-              mode={props.mode}
-            />
-            <Resource
-              label="DSK"
-              usage={stats().disk}
-              detail={bytesDetail(stats().disk)}
-              mode={props.mode}
-            />
-          </>
+          <StatsList stats={stats()} mode={props.mode} compact={!open()} />
         )}
       </Show>
     </box>
@@ -163,6 +204,7 @@ export default Plugin.define({
   setup(context) {
     const interval = numberOption(context.options, "interval", DEFAULT_INTERVAL_MS)
     const position = stringOption(context.options, "position") === "top" ? "top" : "bottom"
+    const title = stringOption(context.options, "title") ?? DEFAULT_TITLE
     const [stats, setStats] = createSignal<Stats>()
     const [failed, setFailed] = createSignal(false)
     const htop = context.client.rpc(Htop)
@@ -189,7 +231,15 @@ export default Plugin.define({
     void refresh()
     const timer = setInterval(() => void refresh(), interval)
 
-    const render = () => <Bars stats={stats()} failed={failed()} mode={context.themeMode} />
+    const render = () => (
+      <Section
+        stats={stats()}
+        failed={failed()}
+        mode={context.themeMode}
+        title={title}
+        titleColor={context.theme.text.base}
+      />
+    )
     const unregister =
       position === "bottom"
         ? context.ui.slot({ append: "sidebar.content", render })
