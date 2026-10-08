@@ -166,15 +166,17 @@ interface SectionProps {
   readonly mode: "dark" | "light"
   readonly title: string
   readonly titleColor: ColorInput
+  /** Whether the section starts expanded. Defaults to collapsed. */
+  readonly initialOpen?: boolean
 }
 
 /**
  * The sidebar section: a title with a triangle that expands or collapses the
- * contents on click, like the Quota section. Expanded shows the full-width
- * bars; collapsed shows one compact line per resource.
+ * contents on click, like the Quota section. Collapsed (the default) shows one
+ * compact line per resource; expanded shows the full-width bars.
  */
 export function Section(props: SectionProps) {
-  const [open, setOpen] = createSignal(true)
+  const [open, setOpen] = createSignal(props.initialOpen === true)
   return (
     <box flexDirection="column" width="100%">
       <box flexDirection="row" gap={1} onMouseDown={() => setOpen((value) => !value)}>
@@ -208,6 +210,7 @@ export default Plugin.define({
     const interval = numberOption(context.options, "interval", DEFAULT_INTERVAL_MS)
     const position = stringOption(context.options, "position") === "top" ? "top" : "bottom"
     const title = stringOption(context.options, "title") ?? DEFAULT_TITLE
+    const expanded = context.options.expanded === true
     const [stats, setStats] = createSignal<Stats>()
     const [failed, setFailed] = createSignal(false)
     const htop = context.client.rpc(Htop)
@@ -241,6 +244,7 @@ export default Plugin.define({
         mode={context.themeMode}
         title={title}
         titleColor={context.theme.text.base}
+        initialOpen={expanded}
       />
     )
     const unregister =

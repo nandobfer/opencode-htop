@@ -3,28 +3,41 @@
 An [OpenCode](https://opencode.ai) plugin that shows live system usage — CPU,
 memory, swap, and disk — as compact colored bars in the sidebar.
 
+Starts collapsed as one line per resource — label, percentage, and colored
+hyphens proportional to usage:
+
+```text
+▶ System
+CPU 33% ------                    2.0/6
+MEM 30% ------                 3.5G/11.7G
+SWP 26% -----                  2.1G/8.0G
+DSK 74% ------------            143G/193G
+```
+
+Click the title or triangle to expand to full-width bars:
+
 ```text
 ▼ System
-CPU 33%                     2.0/6
+CPU 33%                            2.0/6
 ███████████████░░░░░░░░░░░░░░░░░░░░░░░░
-MEM 30%                  3.5G/11.7G
+MEM 30%                         3.5G/11.7G
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░
-SWP 26%                   2.1G/8.0G
+SWP 26%                          2.1G/8.0G
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░
-DSK 74%                   143G/193G
+DSK 74%                          143G/193G
 █████████████████████████████████░░░░░░
 ```
 
-Each resource takes two lines: the label and percentage on the left and
+Each expanded resource takes two lines: the label and percentage on the left and
 used/total on the right, above a bar that stretches to the full width of the
 sidebar. The bar and its figures change color as consumption rises. The numbers
 come from the OpenCode **server**, so the bars reflect the machine that is
 actually running your sessions — even when the TUI is attached to a remote
 server with `opencode --server`.
 
-Click the title or triangle to switch to a compact view (one line per resource,
-with colored hyphens proportional to usage). Click again to expand. Polling
-continues in both views and does not reset the selected view.
+Click the title again to collapse. Polling continues in both views and does not
+reset the selected view. To start expanded instead, set `expanded` to `true`
+(see [Options](#options)).
 
 ## How it works
 
@@ -84,7 +97,8 @@ Pass options through the object form of the plugin entry:
       "package": "github:nandobfer/opencode-htop",
       "options": {
         "interval": 3000,
-        "position": "bottom"
+        "position": "bottom",
+        "expanded": false
       }
     }
   ]
@@ -96,6 +110,7 @@ Pass options through the object form of the plugin entry:
 | `interval` | `number` (ms)            | `3000`     | How often the bars refresh.                              |
 | `title` | `string` | `"System"` | Clickable section heading. |
 | `position` | `"bottom"` \| `"top"`    | `"bottom"` | Where the bars sit inside the sidebar content. `"bottom"` appends them, so they follow the plugin order; `"top"` pins them above the other sections. |
+| `expanded` | `boolean` | `false` | Start expanded (full-width bars) instead of collapsed (one line per resource). The title still toggles. |
 
 ## Colors
 
