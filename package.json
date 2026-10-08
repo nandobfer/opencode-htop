@@ -34,7 +34,7 @@
     "typecheck": "tsc --noEmit",
     "build": "node scripts/build.mjs",
     "test": "npm run build && npx -y bun test --preload @opentui/solid/preload",
-    "prepack": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@opencode/plugin": "latest"
